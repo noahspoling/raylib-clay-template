@@ -2,6 +2,17 @@ cmake_minimum_required(VERSION 3.27)
 project(rayui C)
 set(CMAKE_C_STANDARD 99)
 
+# WebAssembly toggle (must be before fetching raylib)
+option(BUILD_WEB "Build with Emscripten (WebAssembly)" OFF)
+
+# When building for web (via -DBUILD_WEB=ON or emcmake), set platform and output suffix
+if(EMSCRIPTEN OR BUILD_WEB)
+    # Ensure raylib configures for Web before it's fetched/built
+    set(PLATFORM Web CACHE STRING "" FORCE)
+    # Make final output an .html launcher
+    set(CMAKE_EXECUTABLE_SUFFIX ".html")
+endif()
+
 # Adding Raylib
 include(FetchContent)
 set(FETCHCONTENT_QUIET FALSE)
@@ -19,11 +30,39 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(raylib)
 
 file(GLOB SRC_FILES "src/*.c")
-add_executable(hello_world ${SRC_FILES})
+file(GLOB COMPONENT_FILES "src/components/*.c")
+file(GLOB SYSTEM_FILES "src/systems/*.c")
+# UI files
+file(GLOB UI_FILES "src/ui/*.c")
+file(GLOB UI_SCREEN_FILES "src/ui/screens/*.c")
+file(GLOB UI_ELEMENT_FILES "src/ui/elements/*.c")
 
+message(STATUS "SRC_FILES: ${SRC_FILES} 
+                COMPONENT_FILES: ${COMPONENT_FILES} 
+                SYSTEM_FILES: ${SYSTEM_FILES} 
+                UI_FILES: ${UI_FILES}"
+)
+add_executable(hello_world ${SRC_FILES} 
+                           ${COMPONENT_FILES} 
+                           ${SYSTEM_FILES} 
+                           ${UI_FILES}
+)
+
+# Web-specific compile/link options for your app
+if(EMSCRIPTEN OR BUILD_WEB)
+    target_compile_definitions(hello_world PUBLIC PLATFORM_WEB)
+    target_link_options(hello_world PRIVATE
+        -sASYNCIFY
+        -sALLOW_MEMORY_GROWTH=1
+        # Uncomment to package assets into the .data file:
+        # --preload-file ${CMAKE_SOURCE_DIR}/resources@resources
+        # Optional: use Emscripten default shell page, or supply raylib's custom shell:
+        # --shell-file ${raylib_SOURCE_DIR}/src/shell.html
+    )
+endif()
 
 target_compile_options(hello_world PUBLIC)
-target_include_directories(hello_world PUBLIC ./include)
+target_include_directories(hello_world PUBLIC ./include ./include/components ./include/systems ./include/ui)
 
 target_link_libraries(hello_world PUBLIC raylib)
 if(MSVC)
