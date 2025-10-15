@@ -54,8 +54,9 @@ if(EMSCRIPTEN OR BUILD_WEB)
     target_link_options(hello_world PRIVATE
         -sASYNCIFY
         -sALLOW_MEMORY_GROWTH=1
+    -sFORCE_FILESYSTEM=1
         # Uncomment to package assets into the .data file:
-        # --preload-file ${CMAKE_SOURCE_DIR}/resources@resources
+    --preload-file ${CMAKE_SOURCE_DIR}/resources@resources
         # Optional: use Emscripten default shell page, or supply raylib's custom shell:
         # --shell-file ${raylib_SOURCE_DIR}/src/shell.html
     )
