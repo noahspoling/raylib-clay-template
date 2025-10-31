@@ -29,6 +29,21 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(raylib)
 
+FetchContent_Declare(
+    sxml
+    GIT_REPOSITORY "https://github.com/capmar/sxml.git"
+    GIT_TAG "master"
+    GIT_PROGRESS TRUE
+    GIT_SHALLOW TRUE
+)
+
+FetchContent_GetProperties(sxml)
+if(NOT sxml_POPULATED)
+    FetchContent_Populate(sxml)
+    add_library(sxml STATIC ${sxml_SOURCE_DIR}/sxml.c)
+    target_include_directories(sxml PUBLIC ${sxml_SOURCE_DIR})
+endif()
+
 file(GLOB SRC_FILES "src/*.c")
 file(GLOB COMPONENT_FILES "src/components/*.c")
 file(GLOB SYSTEM_FILES "src/systems/*.c")
@@ -65,7 +80,7 @@ endif()
 target_compile_options(hello_world PUBLIC)
 target_include_directories(hello_world PUBLIC ./include ./include/components ./include/systems ./include/ui)
 
-target_link_libraries(hello_world PUBLIC raylib)
+target_link_libraries(hello_world PUBLIC raylib sxml)
 if(MSVC)
   set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
 else()
